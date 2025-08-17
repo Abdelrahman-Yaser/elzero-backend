@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './modules/products/products.module';
-import { UsersModule } from './users/users.module';
-
+import { Product } from './modules/products/entities/product.entity';
+import { ProductEntityImage } from './modules/product-images/entities/product-entiye-image';
+import { Size } from './modules/sizes/entities/size.entity';
 @Module({
   imports: [
     // 1) تحميل المتغيرات من .env
@@ -23,13 +24,14 @@ import { UsersModule } from './users/users.module';
         username: config.get<string>('POSTGRES_USER'),
         password: config.get<string>('POSTGRES_PASSWORD'),
         database: config.get<string>('POSTGRES_DB'),
-        entities: ['dist/**/*.entity{.ts,.js}'],
-        synchronize: true, // خليه false في الـ production
+        // entities: ['dist/**/*.entity{.ts,.js}'],
+        entities: [Product, ProductEntityImage, Size],
+        synchronize: true,
       }),
     }),
 
     ProductsModule,
-    UsersModule,
+    // UsersModule,
   ],
 })
 export class AppModule {}

@@ -1,20 +1,32 @@
-// src/entities/product-image.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+// product-entiye-image.ts
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 
 @Entity('product_images')
-export class ProductImage {
+export class ProductEntityImage {
   @PrimaryGeneratedColumn()
-  id!: number;
-
-  @Column()
-  url!: string;
-
-  @Column({ default: false })
-  is_main!: boolean;
+  id: number;
 
   @ManyToOne(() => Product, (product) => product.images, {
     onDelete: 'CASCADE',
   })
-  product!: Product;
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
+
+  @Column('text', { array: true }) // لو عايز تخزن أكتر من رابط صورة
+  image_url: string[];
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  color: string;
+  @Column({ default: false })
+  is_main: boolean;
+
+  constructor(partial: Partial<ProductEntityImage>) {
+    Object.assign(this, partial);
+  }
 }

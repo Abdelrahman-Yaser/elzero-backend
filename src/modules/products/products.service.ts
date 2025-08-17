@@ -1,92 +1,79 @@
-// src/modules/products/products.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
-
+import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
-import { Category } from '../categories/entities/category.entity';
-import { Tag } from '../tages/entities/tage.entity';
-import { Color } from '../colors/entities/color.entity';
-import { Size } from '../sizes/entities/size.entity';
-import { ProductImage } from '../product-images/entities/product-entiye-image';
-
 import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
-    private prodRepo: Repository<Product>,
-
-    @InjectRepository(Category)
-    private catRepo: Repository<Category>,
-
-    @InjectRepository(Tag)
-    private tagRepo: Repository<Tag>,
-
-    @InjectRepository(Color)
-    private colorRepo: Repository<Color>,
-
-    @InjectRepository(Size)
-    private sizeRepo: Repository<Size>,
-
-    @InjectRepository(ProductImage)
-    private imageRepo: Repository<ProductImage>,
+    private readonly productRepository: Repository<Product>,
   ) {}
 
-  async create(dto: CreateProductDto): Promise<Product> {
-    const p = this.prodRepo.create({
-      name: dto.name,
-      description: dto.description,
-      price_original: dto.price_original,
-      price_discounted: dto.price_discounted,
-      discount_percent: dto.discount_percent,
-      in_stock: dto.in_stock ?? true,
-    });
-
-    // ربط الفئات
-    if (dto.categoryIds?.length) {
-      p.categories = await this.catRepo.findByIds(dto.categoryIds);
-      if (p.categories.length !== dto.categoryIds.length) {
-        throw new NotFoundException('One or more categories not found');
-      }
-    }
-
-    // ربط التاجات
-    if (dto.tagIds?.length) {
-      p.tags = await this.tagRepo.findBy({ id: In(dto.tagIds) });
-    }
-
-    // ربط الألوان
-    if (dto.colorIds?.length) {
-      p.colors = await this.colorRepo.findByIds(dto.colorIds);
-    }
-
-    // ربط المقاسات
-    if (dto.sizeIds?.length) {
-      p.sizes = await this.sizeRepo.findByIds(dto.sizeIds);
-    }
-
-    // إضافة الصور
-    if (dto.imageUrls?.length) {
-      p.images = dto.imageUrls.map((url) => this.imageRepo.create({ url }));
-    }
-
-    return this.prodRepo.save(p);
-  }
-
-  async findAll(): Promise<Product[]> {
-    return this.prodRepo.find({
-      relations: ['categories', 'tags', 'colors', 'sizes', 'images'],
+  // Get all products with images
+  findAll(): Promise<Product[]> {
+    return this.productRepository.find({
+      relations: ['images'],
     });
   }
 
+  // Create a new product
+  // Create a new product
+  async create(productDto: CreateProductDto): Promise<Product> {
+    const product = this.productRepository.create(productDto);
+    const savedProduct = await this.productRepository.save(product);
+
+    const productWithImages = await this.productRepository.findOne({
+      where: { id: savedProduct.id },
+      relations: ['images', 'sizes'],
+      order: {
+        images: {
+          is_main: 'DESC', // ترتيب الصور بحيث تكون الصورة الرئيسية أولاً
+        },
+      },
+    });
+
+    if (!productWithImages) {
+      throw new NotFoundException(
+        `Product with ID ${savedProduct.id} not found after creation`,
+      );
+    }
+
+    return productWithImages;
+  }
+
+  // Get a single product by ID with images
   async findOne(id: number): Promise<Product> {
-    const prod = await this.prodRepo.findOne({
+    const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['categories', 'tags', 'colors', 'sizes', 'images'],
+      relations: ['images', 'sizes'],
+      order: {
+        images: {
+          is_main: 'DESC', // ترتيب الصور بحيث تكون الصورة الرئيسية أولاً
+        },
+      },
     });
-    if (!prod) throw new NotFoundException('Product not found');
-    return prod;
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return product;
+  }
+
+  // Update product
+  async update(id: number, productDto: CreateProductDto): Promise<Product> {
+    await this.productRepository.update(id, productDto);
+    return this.findOne(id); // ترجع المنتج مع الصور بعد التحديث
+  }
+
+  // Delete product by ID
+  async remove(id: number): Promise<void> {
+    const result = await this.productRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
   }
 }

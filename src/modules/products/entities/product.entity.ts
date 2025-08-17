@@ -1,65 +1,57 @@
-// products/entities/product.entity.ts
+// product.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToMany,
-  JoinTable,
+  Check,
   OneToMany,
 } from 'typeorm';
-import { Category } from '../../categories/entities/category.entity';
-import { Color } from '../../colors/entities/color.entity';
-// import { Tag } from '../../tags/entities/tag.entity';
+import { ProductEntityImage } from '../../product-images/entities/product-entiye-image';
 import { Size } from '../../sizes/entities/size.entity';
-import { ProductImage } from '../../product-images/entities/product-entiye-image';
-import { Tag } from 'src/modules/tages/entities/tage.entity';
 
 @Entity('products')
+@Check(`"stock_quantity" >= 0`)
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 250, nullable: true })
   name: string;
 
-  @Column({ nullable: true, type: 'text' })
-  description?: string;
+  @Column({ type: 'text' })
+  description: string;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  price_original: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  price: number;
 
-  @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  price_discounted?: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  discount_percent: number;
 
-  @Column({ nullable: true, type: 'int' })
-  discount_percent?: number;
-
-  @Column({ default: true })
-  in_stock: boolean;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
-
-  @ManyToMany(() => Category, { cascade: true })
-  @JoinTable({
-    name: 'product_categories',
-    joinColumn: { name: 'product_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
+  @Column({
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    asExpression: `"price" - ("price" * COALESCE("discount_percent",0) / 100)`,
+    generatedType: 'STORED',
   })
-  categories: Category[];
+  final_price: number;
 
-  @ManyToMany(() => Tag, { cascade: true })
-  @JoinTable({ name: 'product_tags' })
-  tags: Tag[];
+  @Column({ type: 'int' })
+  stock_quantity: number;
 
-  @ManyToMany(() => Color, { cascade: true })
-  @JoinTable({ name: 'product_colors' })
-  colors: Color[];
+  @Column({ type: 'varchar', length: 100 })
+  brand: string;
 
-  @ManyToMany(() => Size, { cascade: true })
-  @JoinTable({ name: 'product_sizes' })
+  @OneToMany(() => ProductEntityImage, (image) => image.product, {
+    cascade: true,
+  })
+  images: ProductEntityImage[];
+
+  @OneToMany(
+    () => Size,
+    (size) => size.product,
+
+    { cascade: true, onDelete: 'CASCADE' },
+  )
   sizes: Size[];
-
-  @OneToMany(() => ProductImage, (image) => image.product, { cascade: true })
-  images: ProductImage[];
 }
