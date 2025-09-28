@@ -1,11 +1,17 @@
-// src/modules/product-images/dto/create-product-image.dto.ts
-import { IsUrl, IsBoolean, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateProductImageDto {
-  @IsNumber()
-  product_id!: number;
-  @IsUrl({}, { each: true })
-  image_url!: string[];
+  @IsString()
+  image_url: string;
+
+  @IsOptional()
   @IsBoolean()
-  is_main!: boolean;
+  is_main: boolean;
+
+  @IsNumber()
+  product_id: number;
+
+  @IsOptional()
+  @IsString()
+  color: string;
 }

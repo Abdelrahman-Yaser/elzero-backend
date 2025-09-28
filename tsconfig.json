@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+        "types": ["node", "@nestjs/event-emitter"],
     "module": "commonjs",
     "strictPropertyInitialization": false,
     "declaration": true,

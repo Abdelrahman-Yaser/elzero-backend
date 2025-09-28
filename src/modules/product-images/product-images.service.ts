@@ -1,31 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ProductEntityImage } from './entities/product-entiye-image';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
+import { UpdateProductImageDto } from './dto/update-product-image.dto';
+
 @Injectable()
-export class ImagesService {
-  constructor(
-    @InjectRepository(ProductEntityImage)
-    private readonly imageRepo: Repository<ProductEntityImage>,
-  ) {}
-  async create(createProductImageDto: CreateProductImageDto) {
-    const image = this.imageRepo.create(createProductImageDto);
-    return await this.imageRepo.save(image);
+export class ProductImagesService {
+  create(createProductImageDto: CreateProductImageDto) {
+    return 'This action adds a new productImage';
+  }
+ 
+  findAll() {
+    return `This action returns all productImages`;
   }
 
-  async findAll() {
-    return await this.imageRepo.find({ relations: ['product'] });
+  findOne(id: number) {
+    return `This action returns a #${id} productImage`;
   }
 
-  async findByProduct(productId: number) {
-    return await this.imageRepo.find({
-      where: { product: { id: productId } },
-    });
+  update(id: number, updateProductImageDto: UpdateProductImageDto) {
+    return `This action updates a #${id} productImage`;
   }
 
-  async remove(id: number) {
-    await this.imageRepo.delete(id);
-    return { deleted: true };
+  remove(id: number) {
+    return `This action removes a #${id} productImage`;
   }
 }

@@ -2,39 +2,41 @@ import {
   Controller,
   Get,
   Post,
-  Delete,
-  Param,
   Body,
-  ParseIntPipe,
+  Patch,
+  Param,
+  Delete,
 } from '@nestjs/common';
-import { ImagesService } from './product-images.service';
+import { ProductImagesService } from './product-images.service';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
+import { UpdateProductImageDto } from './dto/update-product-image.dto';
 
-@Controller('images')
-export class ImagesController {
-  constructor(private readonly imagesService: ImagesService) {}
+@Controller('product-images')
+export class ProductImagesController {
+  constructor(private readonly productImagesService: ProductImagesService) {}
 
-  // ✅ إضافة صورة جديدة
   @Post()
-  create(@Body() createImageDto: CreateProductImageDto) {
-    return this.imagesService.create(createImageDto);
+  create(@Body() createProductImageDto: CreateProductImageDto) {
+    return this.productImagesService.create(createProductImageDto);
   }
 
-  // ✅ عرض كل الصور
   @Get()
   findAll() {
-    return this.imagesService.findAll();
+    return this.productImagesService.findAll();
   }
 
-  // ✅ عرض الصور الخاصة بمنتج معين
-  @Get('product/:productId')
-  findByProduct(@Param('productId', ParseIntPipe) productId: number) {
-    return this.imagesService.findByProduct(productId);
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.productImagesService.findOne(+id);
   }
 
-  // ✅ حذف صورة بالـ id
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateProductImageDto: UpdateProductImageDto) {
+    return this.productImagesService.update(+id, updateProductImageDto);
+  }
+
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.imagesService.remove(id);
+  remove(@Param('id') id: string) {
+    return this.productImagesService.remove(+id);
   }
 }

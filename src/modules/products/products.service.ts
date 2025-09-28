@@ -3,55 +3,74 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
+import { ProductImage } from '.././product-images/entities/product-image.entity';
+import { Size } from '../sizes/entities/size.entity';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    @InjectRepository(ProductImage)
+    private readonly imageRepository: Repository<ProductImage>,
+
+    @InjectRepository(Size)
+    private readonly sizeRepository: Repository<Size>,
   ) {}
 
   // Get all products with images
   findAll(): Promise<Product[]> {
     return this.productRepository.find({
-      relations: ['images'],
+      relations: ['images', 'sizes'],
+      order: {
+        images: { is_main: 'DESC' },
+      },
     });
   }
 
-  // Create a new product
-  // Create a new product
-  async create(productDto: CreateProductDto): Promise<Product> {
-    const product = this.productRepository.create(productDto);
-    const savedProduct = await this.productRepository.save(product);
+  // Create new product
+  async create(dto: CreateProductDto): Promise<Product> {
+    const { images, sizes, ...baseData } = dto;
 
-    const productWithImages = await this.productRepository.findOne({
-      where: { id: savedProduct.id },
-      relations: ['images', 'sizes'],
-      order: {
-        images: {
-          is_main: 'DESC', // ترتيب الصور بحيث تكون الصورة الرئيسية أولاً
-        },
-      },
-    });
+    const product = this.productRepository.create(baseData);
 
-    if (!productWithImages) {
-      throw new NotFoundException(
-        `Product with ID ${savedProduct.id} not found after creation`,
+    if (images?.length) {
+      product.images = images.map((img) => this.imageRepository.create(img));
+    }
+
+    if (sizes?.length) {
+      product.sizes = sizes.map((s) =>
+        this.sizeRepository.create({
+          ...s,
+          value: Array.isArray(s.value) ? s.value : [s.value],
+        }),
       );
     }
 
-    return productWithImages;
+    const savedProduct = await this.productRepository.save(product);
+
+    const fullProduct = await this.productRepository.findOne({
+      where: { id: savedProduct.id },
+      relations: ['images', 'sizes'],
+    });
+
+    if (!fullProduct) {
+      throw new NotFoundException(
+        `Product with ID ${savedProduct.id} not found`,
+      );
+    }
+
+    return fullProduct;
   }
 
-  // Get a single product by ID with images
+  // Get product by ID
   async findOne(id: number): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id },
       relations: ['images', 'sizes'],
       order: {
-        images: {
-          is_main: 'DESC', // ترتيب الصور بحيث تكون الصورة الرئيسية أولاً
-        },
+        images: { is_main: 'DESC' },
       },
     });
 
@@ -62,13 +81,42 @@ export class ProductsService {
     return product;
   }
 
-  // Update product
-  async update(id: number, productDto: CreateProductDto): Promise<Product> {
-    await this.productRepository.update(id, productDto);
-    return this.findOne(id); // ترجع المنتج مع الصور بعد التحديث
+  // Update product with full sync
+  async update(id: number, dto: CreateProductDto): Promise<Product> {
+    const { images, sizes, ...baseData } = dto;
+
+    const product = await this.productRepository.preload({
+      id,
+      ...baseData,
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    // Images sync
+    if (Array.isArray(images)) {
+      // امسح الصور القديمة وحط الجديدة
+      await this.imageRepository.delete({ product: { id } });
+      product.images = images.map((img) => this.imageRepository.create(img));
+    }
+
+    // Sizes sync
+    if (Array.isArray(sizes)) {
+      await this.sizeRepository.delete({ product: { id } });
+      product.sizes = sizes.map((s) =>
+        this.sizeRepository.create({
+          ...s,
+          value: Array.isArray(s.value) ? s.value : [s.value],
+        }),
+      );
+    }
+
+    await this.productRepository.save(product);
+    return this.findOne(id);
   }
 
-  // Delete product by ID
+  // Delete product
   async remove(id: number): Promise<void> {
     const result = await this.productRepository.delete(id);
 

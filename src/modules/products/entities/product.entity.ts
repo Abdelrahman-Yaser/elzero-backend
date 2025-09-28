@@ -1,4 +1,3 @@
-// product.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,7 +5,7 @@ import {
   Check,
   OneToMany,
 } from 'typeorm';
-import { ProductEntityImage } from '../../product-images/entities/product-entiye-image';
+import { ProductImage } from '../../product-images/entities/product-image.entity';
 import { Size } from '../../sizes/entities/size.entity';
 
 @Entity('products')
@@ -39,13 +38,17 @@ export class Product {
   @Column({ type: 'int' })
   stock_quantity: number;
 
+  @Column({ type: 'int', default: 0 })
+  final_quantity: number;
+
   @Column({ type: 'varchar', length: 100 })
   brand: string;
 
-  @OneToMany(() => ProductEntityImage, (image) => image.product, {
-    cascade: true,
+  @OneToMany(() => ProductImage, (image) => image.product, {
+    cascade: true, // لو عايز تحفظ الصور تلقائياً لما تحفظ المنتج
+    eager: false, // false أفضل عادةً، تجيب الصور عند الحاجة بعلاقات
   })
-  images: ProductEntityImage[];
+  images: ProductImage[];
 
   @OneToMany(
     () => Size,
@@ -54,4 +57,5 @@ export class Product {
     { cascade: true, onDelete: 'CASCADE' },
   )
   sizes: Size[];
+  stock: any;
 }
