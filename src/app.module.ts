@@ -14,8 +14,9 @@ import { OrderItem } from './modules/orders/entities/order-item.entity';
 import { ProductImagesModule } from './modules/product-images/product-images.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuditEntity } from './modules/audit/entity';
-import { UsersModule } from './users/users.module';
-import { UserEntity } from './users/entities/user.entity';
+import { UsersModule } from './modules/users/users.module';
+import { UserEntity } from './modules/users/entities/user.entity';
+import { AuthModule } from './modules/auth/auth.module';
 @Module({
   imports: [
     // 1) تحميل المتغيرات من .env
@@ -57,6 +58,9 @@ import { UserEntity } from './users/entities/user.entity';
     ProductImagesModule,
     AuditModule,
     UsersModule,
+    AuthModule,
+    UsersModule,
+
     // UsersModule, (لو عندك)
   ],
 })

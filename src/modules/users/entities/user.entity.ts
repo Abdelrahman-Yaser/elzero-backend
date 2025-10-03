@@ -1,4 +1,4 @@
-import { Roles } from '../../common/user-roles';
+import { Roles } from '../../../common/user-roles';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity('users')
 export class UserEntity {

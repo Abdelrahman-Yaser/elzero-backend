@@ -8,33 +8,38 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-
+import { AuthService } from '../auth/auth.service';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly usersRepository: Repository<UserEntity>) {}
+    private readonly usersRepository: Repository<UserEntity>,
+    private readonly authService: AuthService,
+  ) {}
+  async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const user = this.usersRepository.create(createUserDto);
 
+    const hashPassword = await this.authService.hashPassword(
+      createUserDto.password,
+    );
+    user.password = hashPassword;
+    // التحقق من وجود مستخدم بنفس البريد الإلكتروني
+    const findUser = await this.usersRepository.findOneBy({
+      email: createUserDto.email,
+    });
 
-async create(createUserDto: CreateUserDto): Promise<UserEntity> {
-  const user = this.usersRepository.create(createUserDto);
+    if (findUser) {
+      throw new ConflictException('User with this email already exists');
+    }
 
-  const findUser = await this.usersRepository.findOneBy({
-    email: createUserDto.email,
-  });
-
-  if (findUser) {
-    // NestJS هيرجع response زي:
-    // { "statusCode": 409, "message": "User with this email already exists", "error": "Conflict" }
-    throw new ConflictException('User with this email already exists');
+    try {
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error creating user: ${String(error)}`,
+      );
+    }
   }
-
-  try {
-    return await this.usersRepository.save(user);
-  } catch (error) {
-    throw new InternalServerErrorException(`Error creating user: ${String(error)}`);
-  }
-}
 
   findAll(): Promise<UserEntity[]> {
     const users = this.usersRepository.find();
