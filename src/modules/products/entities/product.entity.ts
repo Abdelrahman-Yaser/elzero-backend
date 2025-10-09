@@ -12,7 +12,7 @@ import { Size } from '../../sizes/entities/size.entity';
 @Check(`"stock_quantity" >= 0`)
 export class Product {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: string;
 
   @Column({ type: 'varchar', length: 250, nullable: true })
   name: string;

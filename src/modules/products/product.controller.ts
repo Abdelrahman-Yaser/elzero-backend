@@ -13,6 +13,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update_product.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LoggerService } from 'src/logging/logger.services';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 const logger = new LoggerService('product.controller');
 @Controller('products')
@@ -36,8 +37,8 @@ export class ProductsController {
       audit_on: 'Product',
     });
   }
-
-  @Post()
+  @Roles('ADMIN')
+  @Post('create')
   async create(@Body() dto: CreateProductDto) {
     try {
       logger.log('Creating a new product');
@@ -80,7 +81,7 @@ export class ProductsController {
   async findOne(@Param('id') id: string) {
     try {
       logger.log(`Fetching product with id: ${id}`);
-      const product = await this.productsService.findOne(+id);
+      const product = await this.productsService.findOne(id);
       this.logAudit('READ_ONE', { id });
       return product;
     } catch (err) {
@@ -93,7 +94,7 @@ export class ProductsController {
   async update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     try {
       logger.log(`Updating product with id: ${id}`);
-      const updated = await this.productsService.update(+id, dto);
+      const updated = await this.productsService.update(id, dto);
       this.logAudit('UPDATE', { id, dto });
       return updated;
     } catch (err) {

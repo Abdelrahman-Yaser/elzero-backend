@@ -5,7 +5,7 @@ import { UpdateProductImageDto } from './dto/update-product-image.dto';
 @Injectable()
 export class ProductImagesService {
   create(createProductImageDto: CreateProductImageDto) {
-    return 'This action adds a new productImage';
+    return `This action adds a new productImage${createProductImageDto}`;
   }
  
   findAll() {

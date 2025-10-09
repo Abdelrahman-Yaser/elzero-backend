@@ -17,8 +17,6 @@ export class ProductImage {
   @Column({ default: false })
   is_main: boolean;
 
-  @Column({ type: 'int' })
-  product_id: number;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   color: string;

@@ -6,6 +6,4 @@ export class SingInDto {
   @IsString()
   @MinLength(6)
   password: string;
-  @IsString()
-  token: string;
 }

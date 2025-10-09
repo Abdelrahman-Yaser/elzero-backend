@@ -2,15 +2,18 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { UserEntity } from '../users/entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SingInDto } from './dto/singin';
 import { ResetPasswordDto } from './dto/resetPassword';
 import { JwtService } from '@nestjs/jwt';
+import { UserResponse } from './dto/user-response.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +36,11 @@ export class AuthService {
   }
 
   // // 🛠️ Generate Token
-  generateToken(payload: { userId: number; email: string }) {
+  generateToken(payload: {
+    userId: string;
+    email: string;
+    userRoles: string[];
+  }): string {
     console.log('🧩 payload:', payload);
     return this.jwtService.sign(payload);
   }
@@ -72,36 +79,40 @@ export class AuthService {
 
   async signIn(
     singInDto: SingInDto,
-  ): Promise<{ user: UserEntity; token: string } | string> {
-    // 1️⃣ البحث عن المستخدم بالإيميل
-    const user = await this.usersRepository.findOne({
-      where: { email: singInDto.email },
-      select: ['id', 'email', 'password'], // ← مهم جدًا
+  ): Promise<{ user: UserResponse; token: string }> {
+    const user = await this.usersRepository.findOneBy({
+      email: singInDto.email,
     });
 
     if (!user) {
-      console.log('❌ No user found with email:', singInDto.email);
-      return 'User not found';
+      throw new UnauthorizedException('User not found');
     }
 
-    console.log('✅ Found user:', user);
-
-    // 2️⃣ التحقق من الباسورد
     const isPasswordValid = await this.verifyPassword(
       singInDto.password,
       user.password,
     );
 
     if (!isPasswordValid) {
-      console.log('❌ Invalid password');
-      return 'Invalid password';
+      throw new UnauthorizedException('Invalid password');
     }
 
-    const payload = { userId: user.id, email: user.email };
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      userRoles: user.roles,
+    };
     const token = this.generateToken(payload);
-    console.log('🎟️ Token generated successfully:', token);
 
-    return { user, token };
+    // ✅ رجّع بس الحقول اللي عايزها
+    const userResponse: UserResponse = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    };
+
+    return { user: userResponse, token };
   }
 
   async reSetPassword(
@@ -143,5 +154,57 @@ export class AuthService {
         `Error resetting password: ${String(error)}`,
       );
     }
+  }
+  async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const user = this.usersRepository.create(createUserDto);
+
+    const hashPassword = await this.hashPassword(createUserDto.password);
+    user.password = hashPassword;
+    // التحقق من وجود مستخدم بنفس البريد الإلكتروني
+    const findUser = await this.usersRepository.findOneBy({
+      email: createUserDto.email,
+    });
+
+    if (findUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    try {
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error creating user: ${String(error)}`,
+      );
+    }
+  }
+
+  findAll(): Promise<UserEntity[]> {
+    const users = this.usersRepository.find();
+    return users;
+  }
+
+  findOne(id: string): Promise<UserEntity | null> {
+    const user = this.usersRepository.findOneBy({ id });
+    return user;
+  }
+
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserEntity | string | undefined> {
+    const user = await this.usersRepository.preload({ id, ...updateUserDto });
+    if (!user) {
+      return `User with ID ${id} not found`;
+    }
+    return this.usersRepository.save(user);
+  }
+
+  async remove(id: string): Promise<UserEntity | null> {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      return null;
+    }
+    await this.usersRepository.remove(user);
+    return user;
   }
 }

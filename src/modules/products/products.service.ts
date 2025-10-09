@@ -65,7 +65,7 @@ export class ProductsService {
   }
 
   // Get product by ID
-  async findOne(id: number): Promise<Product> {
+  async findOne(id: string): Promise<Product> {
     const product = await this.productRepository.findOne({
       where: { id },
       relations: ['images', 'sizes'],
@@ -82,7 +82,7 @@ export class ProductsService {
   }
 
   // Update product with full sync
-  async update(id: number, dto: CreateProductDto): Promise<Product> {
+  async update(id: string, dto: CreateProductDto): Promise<Product> {
     const { images, sizes, ...baseData } = dto;
 
     const product = await this.productRepository.preload({
@@ -113,7 +113,7 @@ export class ProductsService {
     }
 
     await this.productRepository.save(product);
-    return this.findOne(id);
+    return this.findOne(id as unknown as string);
   }
 
   // Delete product
