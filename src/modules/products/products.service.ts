@@ -5,6 +5,7 @@ import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductImage } from '.././product-images/entities/product-image.entity';
 import { Size } from '../sizes/entities/size.entity';
+import { UpdateProductDto } from './dto/update_product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -67,7 +68,7 @@ export class ProductsService {
   // Get product by ID
   async findOne(id: string): Promise<Product> {
     const product = await this.productRepository.findOne({
-      where: { id },
+      where: { id: +id },
       relations: ['images', 'sizes'],
       order: {
         images: { is_main: 'DESC' },
@@ -82,11 +83,11 @@ export class ProductsService {
   }
 
   // Update product with full sync
-  async update(id: string, dto: CreateProductDto): Promise<Product> {
+  async update(id: string, dto: UpdateProductDto): Promise<Product> {
     const { images, sizes, ...baseData } = dto;
 
     const product = await this.productRepository.preload({
-      id,
+      id: +id,
       ...baseData,
     });
 
@@ -97,13 +98,13 @@ export class ProductsService {
     // Images sync
     if (Array.isArray(images)) {
       // امسح الصور القديمة وحط الجديدة
-      await this.imageRepository.delete({ product: { id } });
+      await this.imageRepository.delete({ product: { id: +id } });
       product.images = images.map((img) => this.imageRepository.create(img));
     }
 
     // Sizes sync
     if (Array.isArray(sizes)) {
-      await this.sizeRepository.delete({ product: { id } });
+      await this.sizeRepository.delete({ product: { id: +id } });
       product.sizes = sizes.map((s) =>
         this.sizeRepository.create({
           ...s,
@@ -113,7 +114,7 @@ export class ProductsService {
     }
 
     await this.productRepository.save(product);
-    return this.findOne(id as unknown as string);
+    return this.findOne(id);
   }
 
   // Delete product

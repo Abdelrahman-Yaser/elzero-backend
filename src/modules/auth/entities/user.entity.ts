@@ -3,20 +3,20 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity('users')
 export class UserEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id!: string;
   @Column()
-  name: string;
+  name!: string;
   @Column()
-  email: string;
+  email!: string;
   @Column()
   phoneNumber?: string;
   @Column()
-  password: string;
+  password!: string;
   @Column({
     type: 'enum',
     enum: Roles,
     array: true,
     default: [Roles.USER],
   })
-  roles: Roles[];
+  roles!: Roles[];
 }

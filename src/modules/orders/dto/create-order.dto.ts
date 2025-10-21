@@ -3,17 +3,17 @@ import { IsArray, IsString, ValidateNested } from 'class-validator';
 
 export class CreateOrderDto {
   @IsString()
-  customerName: string;
+  customerName!: string;
 
   @IsString()
-  customerEmail: string;
+  customerEmail!: string;
 
   @IsString()
-  customerPhone: string;
+  customerPhone!: string;
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateOrderDto)
-  items: CreateOrderDto[];
+  items!: CreateOrderDto[];
   productId: any;
   quantity: any;
 }

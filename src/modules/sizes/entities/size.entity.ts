@@ -13,10 +13,10 @@ export class Size {
 
   @Column({ type: 'varchar', length: 50, array: true })
   value!: string[]; // مصفوفة من المقاسات
-
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   @ManyToOne(() => Product, (product) => product.sizes, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product!: Product;
 }

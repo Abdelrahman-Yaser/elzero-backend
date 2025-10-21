@@ -13,23 +13,25 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update_product.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LoggerService } from 'src/logging/logger.services';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { AuditAction } from '../audit/interfaces/audit-action.enum';
 
 const logger = new LoggerService('product.controller');
+
 @Controller('products')
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
   private logAudit(
-    action: string,
+    action: AuditAction,
     data: any,
     by = 'system',
     errorMessage: string | null = null,
   ) {
     this.eventEmitter.emit('audit.log', {
-      audit_action: action,
+      action,
       audit_data: JSON.stringify(data),
       status: errorMessage ? 'FAILED' : 'SUCCESS',
       error_message: errorMessage,
@@ -37,17 +39,17 @@ export class ProductsController {
       audit_on: 'Product',
     });
   }
-  @Roles('ADMIN')
+
   @Post('create')
   async create(@Body() dto: CreateProductDto) {
     try {
       logger.log('Creating a new product');
       const product = await this.productsService.create(dto);
-      this.logAudit('CREATE', product);
+      this.logAudit(AuditAction.CREATE, product);
       return product;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.logAudit('READ_ALL', {}, 'system', errorMessage);
+      this.logAudit(AuditAction.CREATE, {}, 'system', errorMessage);
       throw err;
     }
   }
@@ -57,36 +59,26 @@ export class ProductsController {
     try {
       logger.log(`Fetching all products - role: ${role}`);
       const products = await this.productsService.findAll();
-      this.logAudit('READ_ALL', { role }, 'system');
+      this.logAudit(AuditAction.READ_ALL, { role }, 'system');
       return products;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.logAudit('READ_ALL', { role }, 'system', errorMessage);
+      this.logAudit(AuditAction.READ_ALL, { role }, 'system', errorMessage);
       throw err;
     }
   }
 
-  // @Get(':id')
-  // async findOne(@Param('id') id: string) {
-  //   try {
-  //     const product = await this.productsService.findOne(+id);
-  //     this.logAudit('READ_ONE', { id });
-  //     return product;
-  //   } catch (err) {
-  //     this.logAudit('READ_ONE', { id }, 'system', err.message);
-  //     throw err;
-  //   }
-  // }
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
       logger.log(`Fetching product with id: ${id}`);
       const product = await this.productsService.findOne(id);
-      this.logAudit('READ_ONE', { id });
+      this.logAudit(AuditAction.READ_ONE, { id });
       return product;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.logAudit('READ_ALL', {}, 'system', errorMessage);
+      this.logAudit(AuditAction.READ_ONE, { id }, 'system', errorMessage);
+      throw err;
     }
   }
 
@@ -95,11 +87,11 @@ export class ProductsController {
     try {
       logger.log(`Updating product with id: ${id}`);
       const updated = await this.productsService.update(id, dto);
-      this.logAudit('UPDATE', { id, dto });
+      this.logAudit(AuditAction.UPDATE, { id, dto });
       return updated;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.logAudit('UPDATE', { id, dto }, 'system', errorMessage);
+      this.logAudit(AuditAction.UPDATE, { id, dto }, 'system', errorMessage);
       throw err;
     }
   }
@@ -109,11 +101,11 @@ export class ProductsController {
     try {
       logger.log(`Deleting product with id: ${id}`);
       const result = await this.productsService.remove(+id);
-      this.logAudit('DELETE', { id });
+      this.logAudit(AuditAction.DELETE, { id });
       return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.logAudit('DELETE', { id }, 'system', errorMessage);
+      this.logAudit(AuditAction.DELETE, { id }, 'system', errorMessage);
       throw err;
     }
   }

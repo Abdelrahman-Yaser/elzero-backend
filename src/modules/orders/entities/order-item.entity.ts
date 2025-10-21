@@ -3,17 +3,17 @@ import { OrderEntity } from './order.entity';
 @Entity('order_items')
 export class OrderItem {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  productName: string;
+  productName!: string;
 
   @Column('int')
-  quantity: number;
+  quantity!: number;
 
   @Column('decimal')
-  price: number;
+  price!: number;
 
   @ManyToOne(() => OrderEntity, (order) => order.items, { onDelete: 'CASCADE' })
-  order: OrderEntity;
+  order!: OrderEntity;
 }

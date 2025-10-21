@@ -15,14 +15,14 @@ export class CreateAuthDto {
     description: 'The full name of the user',
   })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({
     example: 'john@example.com',
     description: 'Valid email address of the user',
   })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({
     example: '+20123456789',
@@ -39,7 +39,7 @@ export class CreateAuthDto {
   })
   @IsString()
   @MinLength(6)
-  password: string;
+  password!: string;
 
   @ApiProperty({
     example: ['Admin', 'User'],

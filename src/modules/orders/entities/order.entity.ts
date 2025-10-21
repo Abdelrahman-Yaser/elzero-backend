@@ -4,23 +4,23 @@ import { OrderItem } from './order-item.entity';
 @Entity('orders')
 export class OrderEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar', length: 250 })
-  customername: string;
+  customername!: string;
 
   @Column({ type: 'varchar', length: 250 })
-  customeremail: string;
+  customeremail!: string;
 
   @Column({ type: 'varchar', length: 15 })
-  customerphone: string;
+  customerphone!: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @OneToMany(() => OrderItem, (item) => item.order, {
     cascade: true,
     onDelete: 'CASCADE',
   })
-  items: OrderItem[];
+  items!: OrderItem[];
 }

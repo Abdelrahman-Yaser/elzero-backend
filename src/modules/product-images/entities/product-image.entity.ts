@@ -9,21 +9,20 @@ import { Product } from '../../products/entities/product.entity';
 @Entity('product_images')
 export class ProductImage {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar', length: 2000, nullable: true })
-  image_url: string;
+  image_url!: string;
 
   @Column({ default: false })
-  is_main: boolean;
-
+  is_main!: boolean;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
-  color: string;
+  color!: string;
 
   @ManyToOne(() => Product, (product) => product.images, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product!: Product;
 }

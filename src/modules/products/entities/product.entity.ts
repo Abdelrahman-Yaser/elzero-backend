@@ -12,19 +12,19 @@ import { Size } from '../../sizes/entities/size.entity';
 @Check(`"stock_quantity" >= 0`)
 export class Product {
   @PrimaryGeneratedColumn()
-  id: string;
+  id!: number;
 
   @Column({ type: 'varchar', length: 250, nullable: true })
-  name: string;
+  name!: string;
 
   @Column({ type: 'text' })
-  description: string;
+  description!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  price!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  discount_percent: number;
+  discount_percent!: number;
 
   @Column({
     type: 'numeric',
@@ -33,29 +33,28 @@ export class Product {
     asExpression: `"price" - ("price" * COALESCE("discount_percent",0) / 100)`,
     generatedType: 'STORED',
   })
-  final_price: number;
+  final_price!: number;
 
   @Column({ type: 'int' })
-  stock_quantity: number;
+  stock_quantity!: number;
 
   @Column({ type: 'int', default: 0 })
-  final_quantity: number;
+  final_quantity!: number;
 
   @Column({ type: 'varchar', length: 100 })
-  brand: string;
+  brand!: string;
 
   @OneToMany(() => ProductImage, (image) => image.product, {
-    cascade: true, // لو عايز تحفظ الصور تلقائياً لما تحفظ المنتج
-    eager: false, // false أفضل عادةً، تجيب الصور عند الحاجة بعلاقات
+    cascade: true,
+    eager: false,
   })
-  images: ProductImage[];
+  images!: ProductImage[];
 
-  @OneToMany(
-    () => Size,
-    (size) => size.product,
+  @OneToMany(() => Size, (size) => size.product, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  sizes!: Size[];
 
-    { cascade: true, onDelete: 'CASCADE' },
-  )
-  sizes: Size[];
-  stock: any;
+  stock!: number;
 }

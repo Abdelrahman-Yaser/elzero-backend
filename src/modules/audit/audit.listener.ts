@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AuditService } from './audit.services';
-import { AuditLogPayload } from 'src/interface/product';
+import { AuditLogPayload } from './interfaces/audit-log-payload.interface';
 @Injectable()
 export class AuditListener {
   constructor(private readonly auditService: AuditService) {}
@@ -9,7 +9,7 @@ export class AuditListener {
   @OnEvent('audit.log')
   async handleAuditLog(payload: AuditLogPayload) {
     await this.auditService.createAuditlog({
-      auditAction: payload.audit_action,
+      auditAction: payload.action,
       auditData:
         typeof payload.audit_data === 'object' && payload.audit_data !== null
           ? payload.audit_data

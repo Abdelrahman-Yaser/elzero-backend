@@ -1,11 +1,11 @@
 import { IsArray, IsString } from 'class-validator';
 export class UserResponse {
   @IsString()
-  id: string;
+  id!: string;
   @IsString()
-  name: string;
+  name!: string;
   @IsString()
-  email: string;
+  email!: string;
   @IsString()
   phoneNumber?: string;
   @IsArray()

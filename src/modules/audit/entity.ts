@@ -8,26 +8,26 @@ import {
 @Entity('audit_logs')
 export class AuditEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  auditAction: string;
+  auditAction!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  auditData: object;
+  auditData!: object;
 
   @Column()
-  status: string;
+  status!: string;
 
   @Column({ nullable: true })
-  errorMessage: string;
+  errorMessage!: string;
 
   @Column()
-  auditBy: string;
+  auditBy!: string;
 
   @Column()
-  auditOn: string;
+  auditOn!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }
