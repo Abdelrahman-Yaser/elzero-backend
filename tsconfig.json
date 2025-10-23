@@ -13,8 +13,7 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "baseUrl": "./",
+    "baseUrl": "src",
     "paths": {
       "@src/*": ["src/*"],
       "@audit/*": ["src/audit/*"],
@@ -22,8 +21,8 @@
       "@modules/*": ["src/modules/*"]
     },
     "types": ["node", "@nestjs/event-emitter"],
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": true
   },
-  "include": ["src"],
+  "include": ["src","src/types"],
   "exclude": ["node_modules", "dist"]
 }

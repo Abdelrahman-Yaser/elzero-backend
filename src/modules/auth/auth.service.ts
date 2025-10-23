@@ -41,7 +41,6 @@ export class AuthService {
     email: string;
     userRoles: string[];
   }): string {
-    console.log('🧩 payload:', payload);
     return this.jwtService.sign(payload);
   }
 

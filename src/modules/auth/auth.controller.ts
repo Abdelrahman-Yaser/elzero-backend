@@ -8,6 +8,7 @@ import {
   Get,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -18,6 +19,9 @@ import { ResetPasswordDto } from './dto/resetPassword';
 import { UserResponse } from './dto/user-response.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { AuthGuard } from './guard/auth.guard';
+import { RolesGuard } from './guard/roles.gurad';
+import { Roles } from './decorators/roles.decorator';
 
 @ApiTags('Auth') // 👈 Group name in Swagger UI
 @Controller('auth')
@@ -60,7 +64,8 @@ export class AutghController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.authService.create(createUserDto);
   }
-
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('owner', 'admin')
   @Get()
   findAll() {
     const users = this.authService.findAll();

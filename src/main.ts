@@ -6,6 +6,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Swagger Configuration
   const config = new DocumentBuilder()
     .setTitle('My API')
     .setDescription('API description')
@@ -18,7 +20,7 @@ async function bootstrap() {
         name: 'JWT',
         in: 'header',
       },
-      'JWT-auth', // This name here is important for matching the security requirement
+      'JWT-auth',
     )
     .build();
 

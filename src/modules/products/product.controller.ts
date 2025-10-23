@@ -7,13 +7,15 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update_product.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { LoggerService } from 'src/logging/logger.services';
+import { LoggerService } from '../../logging/logger.services';
 import { AuditAction } from '../audit/interfaces/audit-action.enum';
+import { AuthGuard } from '../auth/guard/auth.guard';
 
 const logger = new LoggerService('product.controller');
 
@@ -53,7 +55,7 @@ export class ProductsController {
       throw err;
     }
   }
-
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(@Query('role') role: 'ADMIN' | 'ENGINEER') {
     try {
