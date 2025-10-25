@@ -10,78 +10,97 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UserEntity } from './entities/user.entity';
 import { SingInDto } from './dto/singin';
 import { ResetPasswordDto } from './dto/resetPassword';
 import { UserResponse } from './dto/user-response.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateAuthDto } from './dto/update-auth.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthGuard } from './guard/auth.guard';
 import { RolesGuard } from './guard/roles.gurad';
 import { Roles } from './decorators/roles.decorator';
 
-@ApiTags('Auth') // 👈 Group name in Swagger UI
+@ApiTags('Auth')
+@ApiBearerAuth() // ✅ يضيف Authorization header في Swagger
 @Controller('auth')
 export class AutghController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({ summary: 'Register new user' })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' }) // 👈 Description
-  @ApiResponse({ status: 201, description: 'User registered successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid data.' })
   register(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.register(createAuthDto);
   }
 
-  @Post('signIn')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Sign in with email and password' })
+  @ApiOperation({ summary: 'Sign in user' })
   @ApiResponse({
     status: 200,
-    description: 'Successfully logged in.',
+    description: 'Login success',
     type: UserResponse,
   })
-  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  @ApiResponse({ status: 401, description: 'Invalid email or password' })
+  @Post('signIn')
+  @HttpCode(HttpStatus.OK)
   signIn(
     @Body() singInDto: SingInDto,
   ): Promise<{ user: UserResponse; token: string }> {
     return this.authService.signIn(singInDto);
   }
 
-  @Patch('reSetPassword')
   @ApiOperation({ summary: 'Reset user password' })
-  @ApiResponse({ status: 200, description: 'Password reset successfully.' })
-  @ApiResponse({ status: 404, description: 'User not found.' })
+  @ApiResponse({ status: 200, description: 'Password updated successfully' })
+  @Patch('reSetPassword')
   reSetPassword(
     @Body() resetPassword: ResetPasswordDto,
   ): Promise<UserEntity | string> {
     return this.authService.reSetPassword(resetPassword);
   }
+
+  @ApiOperation({ summary: 'Add new user (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Admin added user successfully' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('owner', 'admin')
   @Post('add')
   create(@Body() createUserDto: CreateUserDto) {
     return this.authService.create(createUserDto);
   }
+
+  @ApiOperation({ summary: 'Get all users (Admin only)' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('owner', 'admin')
   @Get()
   findAll() {
-    const users = this.authService.findAll();
-    return users;
+    return this.authService.findAll();
   }
 
+  @ApiOperation({ summary: 'Get specific user by ID (Admin only)' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('owner', 'admin')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.authService.findOne(id);
   }
 
+  @ApiOperation({ summary: 'Update user information (Admin only)' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('owner', 'admin')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateAuthDto) {
     return this.authService.update(id, updateUserDto);
   }
 
+  @ApiOperation({ summary: 'Delete user by ID (Admin only)' })
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('owner', 'admin')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.authService.remove(id);

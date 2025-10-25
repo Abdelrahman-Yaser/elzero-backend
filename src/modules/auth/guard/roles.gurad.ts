@@ -13,8 +13,8 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<string[]>(
-      'roles',
+    const requiredRoles = this.reflector.get<string>(
+      'userRoles',
       context.getHandler(),
     );
     if (!requiredRoles || requiredRoles.length === 0) {

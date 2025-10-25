@@ -13,7 +13,7 @@ import { SingInDto } from './dto/singin';
 import { ResetPasswordDto } from './dto/resetPassword';
 import { JwtService } from '@nestjs/jwt';
 import { UserResponse } from './dto/user-response.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateAuthDto } from './dto/update-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +39,7 @@ export class AuthService {
   generateToken(payload: {
     userId: string;
     email: string;
-    userRoles: string[];
+    userRoles: string;
   }): string {
     return this.jwtService.sign(payload);
   }
@@ -99,7 +99,7 @@ export class AuthService {
     const payload = {
       userId: user.id,
       email: user.email,
-      userRoles: user.roles,
+      userRoles: user.role,
     };
     const token = this.generateToken(payload);
 
@@ -189,9 +189,17 @@ export class AuthService {
 
   async update(
     id: string,
-    updateUserDto: UpdateUserDto,
+    updateUserDto: UpdateAuthDto,
   ): Promise<UserEntity | string | undefined> {
     const user = await this.usersRepository.preload({ id, ...updateUserDto });
+    if (updateUserDto.email) {
+      const existingUser = await this.usersRepository.findOneBy({
+        email: updateUserDto.email,
+      });
+      if (existingUser && existingUser.id !== id) {
+        return `Email ${updateUserDto.email} is already in use by another user`;
+      }
+    }
     if (!user) {
       return `User with ID ${id} not found`;
     }

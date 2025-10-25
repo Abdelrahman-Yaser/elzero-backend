@@ -26,8 +26,6 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    console.log('Authorization Header:', request.headers.authorization);
-
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException('Missing access token');
@@ -37,14 +35,11 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync<IUserPayload>(token, {
         secret: this.getJwtSecret(),
       });
-      if (payload.userRoles === 'owner' || payload.userRoles === 'admin') {
-        throw new UnauthorizedException('Invalid token payload');
-      }
 
-      // ✅ تخزين المستخدم داخل request.user (بشكل رسمي ومعروف للـ TS)
+      console.log('Decoded Payload:', payload);
       request.user = payload;
     } catch (error) {
-      console.error('JWT validation failed with error:', error);
+      console.error('JWT validation failed:', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
 
@@ -54,8 +49,6 @@ export class AuthGuard implements CanActivate {
   private extractTokenFromHeader(request: Request): string | undefined {
     const authHeader = request.headers.authorization;
     if (!authHeader) return undefined;
-    console.log('Authorization Header:', request.headers.authorization);
-
     const [type, token] = authHeader.split(' ');
     return type === 'Bearer' ? token : undefined;
   }

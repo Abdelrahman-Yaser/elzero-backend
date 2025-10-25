@@ -66,7 +66,7 @@ export class CreateProductDto {
     type: () => CreateProductImageDto,
     isArray: true,
     required: false,
-    description: 'Product images'
+    description: 'Product images',
   })
   @IsOptional()
   @ValidateNested({ each: true })
@@ -77,7 +77,7 @@ export class CreateProductDto {
     type: () => CreateSizeDto,
     isArray: true,
     required: false,
-    description: 'Available sizes'
+    description: 'Available sizes',
   })
   @IsOptional()
   @IsArray()
